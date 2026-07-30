@@ -1,0 +1,238 @@
+import { useState, useEffect, useRef } from "react";
+import { notificationService } from "../../services/api";
+import io from 'socket.io-client';
+import { Icon } from "@iconify/react";
+
+export default function NotificationBell() {
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef(null);
+    const socketRef = useRef(null);
+
+    useEffect(() => {
+        loadNotifications();
+
+        // Setup WebSocket connection for real-time notifications
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (token && user._id) {
+            socketRef.current = io('http://localhost:5000', {
+                auth: { token }
+            });
+
+            socketRef.current.on('connect', () => {
+                console.log('✅ Socket connected for notifications');
+                socketRef.current.emit('join', user._id);
+            });
+
+            // SINGLE LISTENER: The backend emits 'new_notification' for EVERYTHING (Incidents, Volunteers, etc.)
+            socketRef.current.on('new_notification', (notification) => {
+                console.log('📩 New notification received:', notification);
+
+                // Ensure the required fields exist
+                const formattedNotif = {
+                    _id: notification._id || Date.now().toString(),
+                    type: notification.type || 'system_announcement',
+                    title: notification.title || 'New Notification',
+                    message: notification.message || '',
+                    createdAt: notification.createdAt || new Date().toISOString(),
+                    isRead: notification.isRead || false,
+                    data: notification.data || {}
+                };
+
+                addNotification(formattedNotif);
+            });
+
+            socketRef.current.on('disconnect', () => {
+                console.log('🔌 Socket disconnected');
+            });
+        } else {
+            console.warn("⚠️ NotificationBell: No token or user ID found.");
+        }
+
+        // Poll for updates as a backup
+        const interval = setInterval(loadNotifications, 30000);
+
+        return () => {
+            clearInterval(interval);
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+            }
+        };
+    }, []);
+
+    // Helper function to update state and localStorage
+    const addNotification = (notification) => {
+        setNotifications(prev => [notification, ...prev]);
+        setUnreadCount(prev => prev + 1);
+
+        // Update localStorage for other components
+        const currentCount = parseInt(localStorage.getItem('unreadCount') || '0');
+        localStorage.setItem('unreadCount', (currentCount + 1).toString());
+
+        // Play notification sound
+        const audio = new Audio('/notificationsound.mp3');
+        audio.play().catch(e => console.log('Audio play failed:', e));
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const loadNotifications = async () => {
+        try {
+            const response = await notificationService.getNotifications();
+            if (response.success) {
+                setNotifications(response.data);
+                setUnreadCount(response.unreadCount || response.data.filter(n => !n.isRead).length);
+                // Store in localStorage for other components to access
+                localStorage.setItem('unreadCount', (response.unreadCount || response.data.filter(n => !n.isRead).length).toString());
+            }
+        } catch (error) {
+            console.error("Failed to load notifications:", error);
+        }
+    };
+
+    const handleMarkAsRead = async (id) => {
+        try {
+            await notificationService.markAsRead(id);
+            loadNotifications();
+        } catch (error) {
+            console.error("Failed to mark as read:", error);
+        }
+    };
+
+    const handleMarkAllAsRead = async () => {
+        try {
+            await notificationService.markAllAsRead();
+            loadNotifications();
+        } catch (error) {
+            console.error("Failed to mark all as read:", error);
+        }
+    };
+
+    const getIcon = (type) => {
+        switch (type) {
+            case 'new_incident': return '🚨';
+            case 'incident_update': return '📝';
+            case 'emergency_alert': return '⚠️';
+            case 'volunteer_status': return '👤';
+            case 'response_assignment': return '🚑';
+            case 'dispatch_update': return '📡';
+            case 'system_announcement': return '📢';
+            default: return '📢';
+        }
+    };
+
+    const formatTime = (dateString) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins} min ago`;
+        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+        return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    };
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            {/* Bell Button - White Icon */}
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="relative focus:outline-none text-white text-xl sm:text-2xl p-1 sm:p-2 rounded-full hover:bg-white/10 transition"
+            >
+                <Icon icon="material-symbols-light:notifications" className="w-6 h-6 sm:w-7 sm:h-7" />
+                {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white text-[10px] sm:text-xs rounded-full min-w-[18px] sm:min-w-[20px] h-[18px] sm:h-[20px] flex items-center justify-center px-1 font-bold">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                )}
+            </button>
+
+            {/* Dropdown - Properly positioned for mobile */}
+            {isOpen && (
+                <div className={`
+                    absolute 
+                    mt-2 
+                    z-50
+                    /* Mobile: right-aligned with screen edge spacing */
+                    right-2 left-auto
+                    w-[calc(100vw-2rem)]
+                    /* Desktop: fixed width */
+                    sm:w-96
+                    sm:right-0
+                `}>
+                    <div className="bg-white rounded-lg shadow-lg border overflow-hidden">
+                        {/* Header */}
+                        <div className="p-3 sm:p-4 border-b sticky top-0 bg-white">
+                            <div className="flex justify-between items-center">
+                                <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Notifications</h3>
+                                {unreadCount > 0 && (
+                                    <button
+                                        onClick={handleMarkAllAsRead}
+                                        className="text-xs text-blue-500 hover:text-blue-700 transition"
+                                    >
+                                        Mark all as read
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Scrollable Content */}
+                        <div className="max-h-96 overflow-y-auto">
+                            {notifications.length === 0 ? (
+                                <div className="p-8 text-center text-gray-500">
+                                    <div className="text-4xl mb-2">🔔</div>
+                                    <p className="text-sm">No notifications</p>
+                                </div>
+                            ) : (
+                                notifications.map((notif) => (
+                                    <div
+                                        key={notif._id}
+                                        className={`p-3 sm:p-4 border-b hover:bg-gray-50 cursor-pointer transition ${!notif.isRead ? 'bg-blue-50' : ''}`}
+                                        onClick={() => handleMarkAsRead(notif._id)}
+                                    >
+                                        <div className="flex items-start gap-2 sm:gap-3">
+                                            {/* Icon */}
+                                            <div className="text-xl sm:text-2xl flex-shrink-0">{getIcon(notif.type)}</div>
+
+                                            {/* Content */}
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm sm:text-base font-semibold text-gray-800 break-words">
+                                                    {notif.title}
+                                                </p>
+                                                <p className="text-xs text-gray-600 mt-1 break-words leading-relaxed">
+                                                    {notif.message}
+                                                </p>
+                                                <p className="text-[10px] sm:text-xs text-gray-400 mt-2">
+                                                    {formatTime(notif.createdAt)}
+                                                </p>
+                                            </div>
+
+                                            {/* Unread Dot */}
+                                            {!notif.isRead && (
+                                                <div className="w-2 h-2 bg-blue-500 rounded-full mt-1 sm:mt-2 flex-shrink-0"></div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
