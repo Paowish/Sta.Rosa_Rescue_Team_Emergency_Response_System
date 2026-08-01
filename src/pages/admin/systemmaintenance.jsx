@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react";
-import AdminLayout from "./alayout";
+import AdminLayout from "./AdminLayout";
 import { useState } from "react";
 
 export default function SystemMaintenance() {
@@ -48,6 +48,16 @@ export default function SystemMaintenance() {
         }
     ]);
 
+    // ------------------ SCHEDULE MODAL STATE ------------------
+    const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+    const [scheduleData, setScheduleData] = useState({
+        frequency: 'Daily',
+        time: '3:00 AM',
+        retentionDays: 30,
+        storagePath: '/var/backups/whatatops',
+        emailNotification: true
+    });
+
     const getLogBadge = (type) => {
         switch (type) {
             case "INFO": return "bg-[#CBE8FF] border border-[#4285F4] text-[#4285F4] font-medium";
@@ -64,6 +74,19 @@ export default function SystemMaintenance() {
             default: return "bg-gray-100 text-gray-700";
         }
     };
+
+    // Toggle component for the modal
+    const ToggleSwitch = ({ checked, onChange }) => (
+        <button
+            onClick={onChange}
+            type="button"
+            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${checked ? 'bg-[#15803d]' : 'bg-gray-300'}`}
+        >
+            <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out ${checked ? 'translate-x-[1.65rem]' : 'translate-x-[0.15rem]'}`}
+            />
+        </button>
+    );
 
     return (
         <AdminLayout>
@@ -176,7 +199,7 @@ export default function SystemMaintenance() {
                                 Schedule: <span className="font-medium text-[#262D31]">Daily at 3:00</span> ·
                                 Retention: <span className="font-medium text-[#262D31]">30 days</span>
                             </p>
-                            <button className="flex items-center gap-2 px-4 py-2 border border-[#0C7FDA] text-[#0C7FDA] rounded-lg text-sm font-medium hover:bg-[#0C7FDA] hover:text-white transition">
+                            <button onClick={() => setIsScheduleModalOpen(true)} className="flex items-center gap-2 px-4 py-2 border border-[#0C7FDA] text-[#0C7FDA] rounded-lg text-sm font-medium hover:bg-[#0C7FDA] hover:text-white transition">
                                 <Icon icon="uil:setting" className="w-4 h-4" />
                                 Configure Schedule
                             </button>
@@ -185,6 +208,112 @@ export default function SystemMaintenance() {
                 </div>
 
             </div>
+
+            {/* ========================================== */}
+            {/* CONFIGURE SCHEDULE MODAL (Matches Screenshot) */}
+            {/* ========================================== */}
+            {isScheduleModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                    <div className="bg-white rounded-lg shadow-2xl w-[560px] max-w-[95vw] overflow-hidden">
+
+                        {/* Top Blue Border */}
+                        <div className="h-1.5 w-full bg-[#3b82f6]"></div>
+
+                        {/* Header */}
+                        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-[20px] font-bold text-gray-800">Configure Backup Schedule</h3>
+                            <button onClick={() => setIsScheduleModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                                <Icon icon="mdi:close" className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-6 space-y-5">
+
+                            {/* Backup Frequency */}
+                            <div>
+                                <label className="block text-[14px] font-medium text-gray-700 mb-1.5">Backup Frequency</label>
+                                <div className="relative">
+                                    <select
+                                        value={scheduleData.frequency}
+                                        onChange={(e) => setScheduleData({ ...scheduleData, frequency: e.target.value })}
+                                        className="w-full appearance-none border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    >
+                                        <option>Daily</option>
+                                        <option>Weekly</option>
+                                        <option>Monthly</option>
+                                    </select>
+                                    <Icon icon="mdi:chevron-down" className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                                </div>
+                            </div>
+
+                            {/* Backup Time */}
+                            <div>
+                                <label className="block text-[14px] font-medium text-gray-700 mb-1.5">Backup Time</label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        value={scheduleData.time}
+                                        onChange={(e) => setScheduleData({ ...scheduleData, time: e.target.value })}
+                                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    />
+                                    <Icon icon="mdi:clock-outline" className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-blue-500 pointer-events-none" />
+                                </div>
+                            </div>
+
+                            {/* Retention Period (Days) */}
+                            <div>
+                                <label className="block text-[14px] font-medium text-gray-700 mb-1.5">Retention Period (Days)</label>
+                                <input
+                                    type="number"
+                                    value={scheduleData.retentionDays}
+                                    onChange={(e) => setScheduleData({ ...scheduleData, retentionDays: parseInt(e.target.value) })}
+                                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                            </div>
+
+                            {/* Backup Storage Path */}
+                            <div>
+                                <label className="block text-[14px] font-medium text-gray-700 mb-1.5">Backup Storage Path</label>
+                                <input
+                                    type="text"
+                                    value={scheduleData.storagePath}
+                                    onChange={(e) => setScheduleData({ ...scheduleData, storagePath: e.target.value })}
+                                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                            </div>
+
+                            {/* Email Notification */}
+                            <div className="flex items-start justify-between pt-2">
+                                <div>
+                                    <label className="block text-[14px] font-medium text-gray-700">Email Notification on Backup</label>
+                                    <p className="text-[13px] text-gray-500 mt-0.5">Notify admin on completion</p>
+                                </div>
+                                <ToggleSwitch
+                                    checked={scheduleData.emailNotification}
+                                    onChange={() => setScheduleData({ ...scheduleData, emailNotification: !scheduleData.emailNotification })}
+                                />
+                            </div>
+
+                        </div>
+
+                        {/* Footer Buttons */}
+                        <div className="flex justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-200">
+                            <button onClick={() => setIsScheduleModalOpen(false)} className="px-5 py-1.5 text-[14px] font-medium text-gray-700 bg-white border border-gray-200 rounded hover:bg-gray-50 transition-colors">
+                                Cancel
+                            </button>
+                            <button onClick={() => {
+                                alert("Backup schedule saved!");
+                                setIsScheduleModalOpen(false);
+                            }} className="px-6 py-1.5 text-[14px] font-medium text-white bg-[#0C7FDA] rounded hover:bg-[#0b6eb5] transition-colors shadow-sm">
+                                Save Schedule
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
         </AdminLayout>
     );
 }

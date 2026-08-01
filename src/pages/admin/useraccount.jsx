@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react";
-import AdminLayout from "./alayout";
+import AdminLayout from "./AdminLayout";
 import { useState, useEffect } from "react";
 
 export default function UserAccount() {
@@ -343,8 +343,8 @@ export default function UserAccount() {
                                                     <button
                                                         onClick={() => handleToggleStatus(user)}
                                                         className={`transition ${user.status === "ACTIVE"
-                                                                ? "text-green-600 hover:text-green-800"
-                                                                : "text-yellow-600 hover:text-yellow-800"
+                                                            ? "text-green-600 hover:text-green-800"
+                                                            : "text-yellow-600 hover:text-yellow-800"
                                                             }`}
                                                         title={user.status === "ACTIVE" ? "Deactivate User" : "Activate User"}
                                                     >

@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react";
-import AdminLayout from "./alayout";
+import AdminLayout from "./AdminLayout";
 import { useState, useEffect } from "react";
 
 export default function AdminOverview() {

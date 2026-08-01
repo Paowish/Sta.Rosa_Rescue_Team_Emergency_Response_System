@@ -13,12 +13,16 @@ import AdminOverview from './pages/admin/adminoverview';
 import UserAccount from './pages/admin/useraccount';
 import IncidentReports from './pages/admin/incidentreport';
 import SystemMaintenance from './pages/admin/systemmaintenance';
-import RescueProfile from './pages/admin/rescueprofile';
+import Profile from './pages/admin/profile';
 import Units from './pages/admin/Units';
+import SystemSettings from './pages/admin/systemsettings';
+import AdminLayout from "./pages/admin/AdminLayout.jsx";
 
 // Legacy Admin Pages (Keep for backward compatibility)
 import Dashboard from "./pages/admin/dashboard";
 import IncidentManagement from "./pages/admin/incidentmanagement";
+
+// ✅ FIXED: Separate Route for Volunteers
 import VolunteerApproval from "./pages/admin/volunteerapproval";
 import ApplicantDetails from "./pages/admin/applicantdetails";
 
@@ -28,11 +32,8 @@ import Overview from "./pages/civilian/overview";
 import TrackReports from "./pages/civilian/trackreports";
 import EditProfile from "./pages/civilian/editprofile";
 
-// Incident Reporting Flow (Civilian)
-import Step1 from "./pages/civilian/reportIncident/report";
-import AddPhoto from "./pages/civilian/reportIncident/addphoto";
-import IncidentDetails from "./pages/civilian/reportIncident/details";
-import Review from "./pages/civilian/reportIncident/review";
+// ✅ NEW: Unified Incident Reporting Flow (Replaces 5 old files)
+import ReportIncident from "./pages/civilian/reportIncident/ReportIncident";
 import SubmitSuccess from "./pages/civilian/reportIncident/submit";
 
 // Volunteer Pages
@@ -63,7 +64,7 @@ function App() {
           />
 
           {/* ========================================================== */}
-          {/* ✅ FIXED: NEW ADMIN ROUTES (RENDERED DIRECTLY)             */}
+          {/* ✅ NEW ADMIN ROUTES (RENDERED DIRECTLY)                    */}
           {/* ========================================================== */}
           <Route
             path="/admin/overview"
@@ -102,16 +103,27 @@ function App() {
           />
 
           <Route
+            path="/admin/systemsettings"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLayout>  {/* <-- ADD THIS LINE */}
+                  <SystemSettings />
+                </AdminLayout> {/* <-- ADD THIS LINE */}
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/admin/profile"
             element={
-              <ProtectedRoute allowedRoles={['admin', 'dispatcher', 'responder']}>
-                <RescueProfile />
+              <ProtectedRoute allowedRoles={['admin']}>
+                <Profile />
               </ProtectedRoute>
             }
           />
 
           {/* ========================================================== */}
-          {/* ✅ RESCUE TEAM ROUTES (KEEP WRAPPED IN DASHBOARD LAYOUT)   */}
+          {/* ✅ RESCUE TEAM ROUTES (WRAPPED IN DASHBOARD LAYOUT)        */}
           {/* ========================================================== */}
           <Route
             path="/units"
@@ -124,7 +136,6 @@ function App() {
             }
           />
 
-          {/* ✅ FIXED: Dashboard is now connected to onIncidentClick */}
           <Route
             path="/dashboard"
             element={
@@ -136,7 +147,6 @@ function App() {
             }
           />
 
-          {/* ✅ FIXED: Incident Management is now connected to onIncidentClick */}
           <Route
             path="/incidents"
             element={
@@ -148,10 +158,11 @@ function App() {
             }
           />
 
+          {/* ✅ FIXED: When you click "Volunteers", it goes here */}
           <Route
             path="/volunteer-approval"
             element={
-              <ProtectedRoute allowedRoles={['responder']}>
+              <ProtectedRoute allowedRoles={['admin', 'dispatcher', 'responder']}>
                 <DashboardLayout>
                   <VolunteerApproval />
                 </DashboardLayout>
@@ -170,7 +181,6 @@ function App() {
             }
           />
 
-          {/* ✅ NEW: RESCUE TEAM PROFILE ROUTE */}
           <Route
             path="/profile"
             element={
@@ -236,46 +246,13 @@ function App() {
             }
           />
 
-          {/* ==================== INCIDENT REPORTING FLOW ==================== */}
+          {/* ==================== ✅ UNIFIED INCIDENT REPORTING FLOW ==================== */}
           <Route
             path="/report"
             element={
               <ProtectedRoute allowedRoles={['civilian']}>
                 <CivilianDashboard>
-                  <Step1 />
-                </CivilianDashboard>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/addphoto"
-            element={
-              <ProtectedRoute allowedRoles={['civilian']}>
-                <CivilianDashboard>
-                  <AddPhoto />
-                </CivilianDashboard>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/details"
-            element={
-              <ProtectedRoute allowedRoles={['civilian']}>
-                <CivilianDashboard>
-                  <IncidentDetails />
-                </CivilianDashboard>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/review"
-            element={
-              <ProtectedRoute allowedRoles={['civilian']}>
-                <CivilianDashboard>
-                  <Review />
+                  <ReportIncident />
                 </CivilianDashboard>
               </ProtectedRoute>
             }
@@ -284,11 +261,9 @@ function App() {
           <Route
             path="/submit"
             element={
-              <ProtectedRoute allowedRoles={['civilian']}>
-                <CivilianDashboard>
-                  <SubmitSuccess />
-                </CivilianDashboard>
-              </ProtectedRoute>
+              <CivilianDashboard>
+                <SubmitSuccess />
+              </CivilianDashboard>
             }
           />
 

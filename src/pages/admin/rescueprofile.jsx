@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import AdminLayout from "./alayout";
+import AdminLayout from "./AdminLayout";
 import { authService } from "../../services/api";
 
 export default function RescueProfile() {

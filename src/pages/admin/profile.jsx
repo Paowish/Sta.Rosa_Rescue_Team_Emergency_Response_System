@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "@iconify/react";
-import AdminLayout from "./alayout";
+import AdminLayout from "./AdminLayout";
 
 export default function Profile() {
     const navigate = useNavigate();
@@ -413,7 +413,7 @@ export default function Profile() {
                 <div className="mb-6">
                     <div className="flex items-center gap-3">
                         <Icon icon="iconamoon:profile-fill" className="w-8 h-8 text-[#0E4B5E]" />
-                        <h1 className="text-2xl font-semibold text-[#262D31]">User Account</h1>
+                        <h1 className="text-2xl font-semibold text-[#262D31]">System Admin Profile</h1>
                     </div>
                     <p className="text-sm text-gray-500 mt-1">
                         Manage your account information and preferences
@@ -437,9 +437,9 @@ export default function Profile() {
                             </div>
                             <div>
                                 <h2 className="text-xl font-semibold text-gray-700">
-                                    {originalUser.firstName} {originalUser.lastName}
+                                    {originalUser.firstName}
                                 </h2>
-                                <p className="text-sm text-gray-500">Admin</p>
+                                <p className="text-sm text-gray-500">System Admin</p>
                             </div>
                         </div>
                         <button

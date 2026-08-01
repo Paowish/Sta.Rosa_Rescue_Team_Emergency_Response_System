@@ -1,12 +1,39 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import { useParams, useNavigate } from 'react-router-dom';
 
 export default function ApplicantDetails({ data, onClose }) {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   // If no data prop and we have an id from URL, fetch data here
   // Otherwise use the data prop as is
-  
+
   // Handle close - either call onClose or navigate back
   const handleClose = () => {
     if (onClose) {

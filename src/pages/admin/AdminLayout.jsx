@@ -2,9 +2,9 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import { useState, useEffect } from "react";
 
+
 export default function AdminLayout({ children }) {
     const navigate = useNavigate();
-    const [userName, setUserName] = useState("Admin");
     const [profileImage, setProfileImage] = useState("");
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -14,7 +14,6 @@ export default function AdminLayout({ children }) {
         if (user) {
             try {
                 const userData = JSON.parse(user);
-                setUserName(`${userData.firstName} ${userData.lastName}` || "Admin");
                 if (userData.profileImage) {
                     setProfileImage(userData.profileImage);
                 }
@@ -134,9 +133,10 @@ export default function AdminLayout({ children }) {
                                 )}
                             </div>
                             <div>
+                                {/* ✅ UPDATED: Hardcoded to "System Admin" */}
                                 <p className="text-xs text-gray-500">Admin</p>
                                 <p className="text-sm font-medium text-gray-700 truncate max-w-[140px]">
-                                    {userName}
+                                    System Admin
                                 </p>
                             </div>
                         </div>
@@ -183,6 +183,17 @@ export default function AdminLayout({ children }) {
                                 System Maintenance
                             </NavLink>
 
+                            {/* ✅ ADDED: System Settings under System Maintenance */}
+                            <NavLink
+                                to="/admin/systemsettings"
+                                className={({ isActive }) =>
+                                    `p-2 rounded hover:bg-gray-200 cursor-pointer flex items-center gap-3 ${isActive ? 'bg-blue-100 text-blue-600 font-medium' : ''}`
+                                }
+                            >
+                                <Icon icon="mdi:cog" className="w-5 h-5" />
+                                System Settings
+                            </NavLink>
+
                             <NavLink
                                 to="/admin/profile"
                                 className={({ isActive }) =>
@@ -206,7 +217,7 @@ export default function AdminLayout({ children }) {
                 </div>
 
                 {/* MAIN CONTENT */}
-                <div className="flex-1 bg-[#EEF2F6] overflow-y-auto">
+                <div className="flex-1 bg-[#EEF2F6] overflow-y-auto p-6">
                     {children}
                 </div>
 
