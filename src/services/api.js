@@ -44,7 +44,7 @@ export const safeDisplay = (htmlContent) => {
 // ============================================
 
 // Option 1: Using a fixed ngrok URL (your current setup)
-const BACKEND_NGROK_URL = 'https://theater-preaching-truth.ngrok-free.dev/api';
+const BACKEND_NGROK_URL = 'https://theater-preaching-truth.ngrok-free.dev';
 
 const getApiUrl = () => {
     // If on localhost (computer), use localhost
