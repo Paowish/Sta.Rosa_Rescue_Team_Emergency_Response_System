@@ -115,7 +115,7 @@ export default function Login() {
         console.log("🔄 Redirecting based on role:", userRole);
 
         // Show loading for 2 seconds before redirecting
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // await new Promise(resolve => setTimeout(resolve, 2000));
 
         // 🚨 CRITICAL FIX: Admin should go to /admin/overview first
         if (userRole === "admin") {
